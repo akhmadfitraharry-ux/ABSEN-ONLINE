@@ -223,6 +223,11 @@
   .cal-cell.weekend{ color:var(--alpa); }
   .cal-cell.holiday{ background:rgba(241,76,76,.16); color:var(--alpa); font-weight:700; }
   .cal-cell.today{ border:2px solid var(--primary); font-weight:700; }
+  .cal-cell.done{ background:var(--hadir); color:#0e1b22; font-weight:800; box-shadow:0 3px 0 rgba(0,0,0,.28); }
+  .cal-cell.missed{ border:2px dashed #F5A623; color:#F5A623; font-weight:800; }
+  .cal-cell.clickable{ cursor:pointer; }
+  .cal-cell.clickable:hover{ transform:translateY(-2px); outline:2px solid #ffffff44; }
+  .dotleg.orange{ background:#F5A623; }
   .cal-dot{ width:5px; height:5px; border-radius:50%; background:var(--hadir); position:absolute; bottom:5px; }
   .cal-legend{ display:flex; gap:14px; font-size:12px; color:var(--muted); margin-top:12px; flex-wrap:wrap; }
   .dotleg{ display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:4px; }
@@ -474,6 +479,7 @@
         <span><i class="dotleg red"></i>Tanggal merah</span>
         <span><i class="dotleg blue"></i>Hari ini</span>
         <span><i class="dotleg green"></i>Sudah diabsen</span>
+        <span><i class="dotleg orange"></i>Terlewat</span>
       </div>
       <div id="calHolidayList" style="margin-top:12px; font-size:13px; color:var(--muted); line-height:1.6;"></div>
     </div>
@@ -791,6 +797,24 @@ function initCalendar(){
   calMonth = now.getMonth();
   renderCalendar();
 }
+function hasAbsenOn(key){
+  try{ const raw = localStorage.getItem(`absensi:${key}`); return !!raw && raw !== "{}"; }catch(e){ return false; }
+}
+function earliestAbsenKey(){
+  let earliest = null;
+  try{
+    for(let i=0;i<localStorage.length;i++){
+      const k = localStorage.key(i);
+      if(k && k.startsWith("absensi:")){ const d = k.slice(8); if(/^\d{4}-\d{2}-\d{2}$/.test(d) && hasAbsenOn(d) && (!earliest || d < earliest)) earliest = d; }
+    }
+  }catch(e){}
+  return earliest;
+}
+function openScanForDate(key){
+  scanDateOverride = (key === todayKey()) ? null : key;
+  const tab = document.querySelector('.side-item[data-tab="scan"]');
+  if(tab) tab.click();
+}
 function renderCalendar(){
   const first = new Date(calYear, calMonth, 1);
   const startDay = first.getDay();
@@ -804,6 +828,7 @@ function renderCalendar(){
     grid.appendChild(cell);
   }
   const todayStr = todayKey();
+  const earliest = earliestAbsenKey();
   const monthHolidays = [];
   for(let d=1; d<=daysInMonth; d++){
     const dateObj = new Date(calYear, calMonth, d);
@@ -819,18 +844,23 @@ function renderCalendar(){
     }
     if(key === todayStr) cell.classList.add("today");
     cell.innerHTML = `<span>${d}</span>`;
-    try{
-      if(localStorage.getItem(`absensi:${key}`)){
-        const dot = document.createElement("span");
-        dot.className = "cal-dot";
-        cell.appendChild(dot);
-      }
-    }catch(e){}
+    const done = hasAbsenOn(key);
+    if(done){ cell.classList.add("done"); }
+    else if(earliest && key > earliest && key < todayStr && dow !== 0 && dow !== 6 && !HOLIDAYS_2026[key]){
+      cell.classList.add("missed");
+      cell.title = "Terlewat — ketuk untuk absen di tanggal ini";
+    }
+    if(key <= todayStr){
+      cell.classList.add("clickable");
+      if(done) cell.title = "Sudah diabsen — ketuk untuk melihat/mengubah";
+      cell.addEventListener("click", ()=> openScanForDate(key));
+    }
     grid.appendChild(cell);
   }
-  document.getElementById("calHolidayList").innerHTML = monthHolidays.length
+  document.getElementById("calHolidayList").innerHTML = (monthHolidays.length
     ? monthHolidays.join("<br>")
-    : "Tidak ada tanggal merah bulan ini.";
+    : "Tidak ada tanggal merah bulan ini.")
+    + `<br><span style="color:var(--ink);">Ketuk tanggal hijau/oranye untuk mengabsen atau mengubah absen di tanggal itu.</span>`;
 }
 document.getElementById("calPrev").addEventListener("click", ()=>{
   calMonth--; if(calMonth<0){ calMonth=11; calYear--; }
@@ -1149,6 +1179,7 @@ async function renderHome(){
     el.appendChild(div);
   });
   renderAttendancePie(counts, belum);
+  try{ renderCalendar(); }catch(e){}
   loadWeatherWidget();
 }
 
