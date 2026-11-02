@@ -3,7 +3,15 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Absensi Kelas 3 SD Negeri 1 Barabai Timur</title>
+<title>Absen Kelas</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0f7a6e">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Absen Kelas">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="icon" type="image/png" href="icons/favicon.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
@@ -329,13 +337,78 @@
     .qr-card{ background:#fff !important; }
     .qr-grid{ grid-template-columns:1fr 1fr 1fr; }
   }
+
+  /* ---------- Tampilan 3D ---------- */
+  .content{ padding-bottom:64px; }
+  .card{
+    border:1px solid var(--line);
+    box-shadow:0 1px 0 rgba(255,255,255,.35) inset, 0 2px 0 var(--line), 0 12px 24px -8px rgba(0,0,0,.35), 0 4px 8px rgba(0,0,0,.12);
+    transform:translateZ(0); transition:transform .25s ease, box-shadow .25s ease;
+  }
+  .card:hover{ transform:perspective(900px) translateY(-3px) rotateX(2deg); box-shadow:0 1px 0 rgba(255,255,255,.35) inset, 0 3px 0 var(--line), 0 20px 32px -10px rgba(0,0,0,.4), 0 6px 12px rgba(0,0,0,.15); }
+  .stat-card, .sum-chip{
+    position:relative; border-radius:14px;
+    background-image:linear-gradient(160deg, rgba(255,255,255,.28), rgba(255,255,255,0) 55%, rgba(0,0,0,.18));
+    box-shadow:0 1px 0 rgba(255,255,255,.4) inset, 0 5px 0 rgba(0,0,0,.28), 0 12px 18px -6px rgba(0,0,0,.4);
+    transition:transform .2s ease, box-shadow .2s ease;
+  }
+  .stat-card:hover, .sum-chip:hover{ transform:perspective(700px) translateY(-3px) rotateX(6deg); }
+  .btn-primary, .btn-danger, .menu-btn{
+    position:relative; transition:transform .12s ease, box-shadow .12s ease;
+    box-shadow:0 1px 0 rgba(255,255,255,.35) inset, 0 5px 0 rgba(0,0,0,.30), 0 9px 14px -4px rgba(0,0,0,.35);
+  }
+  .btn-primary{ background-image:linear-gradient(180deg, rgba(255,255,255,.22), rgba(255,255,255,0) 60%); }
+  .btn-primary:hover, .btn-danger:hover, .menu-btn:hover{ transform:translateY(-2px); }
+  .btn-primary:active, .btn-danger:active, .menu-btn:active{
+    transform:translateY(4px); box-shadow:0 1px 0 rgba(255,255,255,.35) inset, 0 1px 0 rgba(0,0,0,.30), 0 3px 6px -2px rgba(0,0,0,.35);
+  }
+  .topbar{ box-shadow:0 6px 0 rgba(0,0,0,.12), 0 12px 22px -6px rgba(0,0,0,.35); }
+  .sidebar{ box-shadow:10px 0 28px -6px rgba(0,0,0,.45), 3px 0 0 rgba(0,0,0,.12); }
+  .side-item{ transition:transform .15s ease, box-shadow .15s ease; }
+  .side-item:hover{ transform:translateX(4px) translateZ(0); }
+  .side-item.active{ box-shadow:0 1px 0 rgba(255,255,255,.3) inset, 0 4px 0 rgba(0,0,0,.22), 0 8px 12px -4px rgba(0,0,0,.3); }
+  input.text-input{ box-shadow:inset 0 3px 6px rgba(0,0,0,.25); }
+  table{ border-collapse:separate; border-spacing:0 2px; }
+  .design-credit{
+    position:fixed; left:0; right:0; bottom:0; z-index:30; text-align:center;
+    font-size:12.5px; font-weight:700; padding:8px 12px; color:var(--muted);
+    background:var(--surface); border-top:1px solid var(--line);
+    box-shadow:0 -6px 16px -6px rgba(0,0,0,.3);
+    text-shadow:0 1px 0 rgba(255,255,255,.25), 0 2px 3px rgba(0,0,0,.25);
+  }
+  @media (prefers-reduced-motion:reduce){ .card:hover,.stat-card:hover,.sum-chip:hover{ transform:none; } }
+
+  /* ---------- Tanggal absen & penanda sudah diabsen ---------- */
+  .scan-date-card{ margin-bottom:14px; }
+  .scan-date-row{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .scan-date-row label{ font-weight:700; font-size:13px; color:var(--muted); }
+  .scan-date-row input[type=date]{ flex:1; min-width:150px; padding:10px 12px; border:1.5px solid var(--line); border-radius:8px; background:var(--input-bg); color:var(--ink); font-size:15px; font-family:inherit; }
+  .scan-date-row .btn-primary{ padding:10px 14px; font-size:13.5px; }
+  .scan-date-banner{ margin-top:10px; padding:10px 12px; border-radius:10px; background:#F5A623; color:#2b1a00; font-weight:800; font-size:13.5px; box-shadow:0 3px 0 rgba(0,0,0,.25); }
+  .missed-days{ margin-top:10px; display:flex; flex-wrap:wrap; gap:6px; align-items:center; font-size:12.5px; color:var(--muted); }
+  .missed-chip{ padding:6px 10px; border-radius:999px; border:1.5px solid #F5A623; background:transparent; color:var(--ink); font-weight:700; font-size:12.5px; cursor:pointer; font-family:inherit; }
+  .missed-chip:hover{ background:#F5A62333; }
+  .dot.done{ font-weight:800; font-size:12.5px; border:2px solid rgba(0,0,0,.35); }
+  .dot-legend{ display:flex; flex-wrap:wrap; gap:12px; margin-top:12px; font-size:12px; color:var(--muted); }
+  .dot-legend span{ display:inline-flex; align-items:center; gap:5px; font-weight:700; }
+  .dot-legend i{ width:12px; height:12px; border-radius:3px; display:inline-block; }
+
+  /* ---------- Setup kelas ---------- */
+  textarea.text-input{
+    width:100%; padding:13px 14px; border:1.5px solid var(--line); border-radius:8px; font-size:15px;
+    background:var(--input-bg); color:var(--ink); margin-bottom:12px; resize:vertical; box-shadow:inset 0 3px 6px rgba(0,0,0,.25);
+  }
+  .setup-overlay{ position:fixed; inset:0; background:rgba(0,0,0,.65); display:none; align-items:flex-start; justify-content:center; overflow:auto; z-index:9000; padding:20px 12px 40px; }
+  .setup-overlay.open{ display:flex; }
+  .setup-box{ width:100%; max-width:560px; background:var(--surface); color:var(--ink); border-radius:16px; padding:22px; margin:auto 0; box-shadow:0 20px 50px rgba(0,0,0,.5); }
+  .setup-label{ display:block; font-size:12.5px; font-weight:700; color:var(--muted); margin:2px 0 6px; }
 </style>
 </head>
 <body>
 
 <div class="topbar">
   <button class="menu-btn" id="menuBtn">☰</button>
-  <div class="topbar-title">Absensi Kelas 3</div>
+  <div class="topbar-title" id="topbarTitle">Absen Kelas</div>
   <div class="topbar-clock" id="clockLabel"></div>
 </div>
 
@@ -343,8 +416,8 @@
 <aside class="sidebar" id="sidebar">
   <div class="sidebar-profile">
     <div class="avatar">👤</div>
-    <div class="pname">Akhmad Fitra Harry, S.Pd</div>
-    <div class="prole">Wali Kelas 3</div>
+    <div class="pname" id="pGuru">Nama Guru</div>
+    <div class="prole" id="pPeran">Wali Kelas</div>
   </div>
   <nav class="sidebar-menu">
     <button data-tab="home" class="side-item active"><span class="icon-dot green">🏠</span>Beranda</button>
@@ -357,7 +430,7 @@
     <button data-tab="settings" class="side-item"><span class="icon-dot gray">⚙️</span>Pengaturan</button>
     <button data-tab="about" class="side-item"><span class="icon-dot gray">ℹ️</span>Tentang</button>
   </nav>
-  <div class="sidebar-footer">Absensi Kelas 3 SDN 1 Barabai Timur</div>
+  <div class="sidebar-footer" id="sidebarFooter">Absen Kelas<br>Design by Akhmad Fitra Harry, S.Pd</div>
 </aside>
 
 <div class="content">
@@ -365,8 +438,8 @@
   <!-- HOME -->
   <section class="panel active" id="panel-home">
     <div class="home-greeting">
-      <span class="school">SD Negeri 1 Barabai Timur</span>
-      <h1>Selamat datang, Bapak Fitra 👋</h1>
+      <span class="school" id="greetSchool"></span>
+      <h1 id="greetTitle">Selamat datang 👋</h1>
       <span class="date" id="todayLabel"></span>
     </div>
 
@@ -380,8 +453,8 @@
       </div>
     </div>
 
-    <div class="card" style="margin-top:16px;">
-      <h3 class="section-title">Cuaca & Kualitas Udara — Barabai</h3>
+    <div class="card" id="weatherCard" style="margin-top:16px;">
+      <h3 class="section-title" id="weatherTitle">Cuaca & Kualitas Udara</h3>
       <div class="stat-grid" id="weatherWidget">
         <div class="stat-card" style="background:var(--muted); grid-column:1/-1;"><span class="l">Memuat data cuaca...</span></div>
       </div>
@@ -410,6 +483,15 @@
 
   <!-- SCAN TAB (Absensi) -->
   <section class="panel" id="panel-scan">
+    <div class="card scan-date-card">
+      <div class="scan-date-row">
+        <label for="scanDateInput">Tanggal absen</label>
+        <input type="date" id="scanDateInput">
+        <button class="btn-primary" id="scanDateTodayBtn">Hari ini</button>
+      </div>
+      <div class="scan-date-banner" id="scanDateBanner" style="display:none;"></div>
+      <div class="missed-days" id="missedDays"></div>
+    </div>
     <div class="scan-zone-slot" id="scanSlot-absensi">
       <div id="scanZone">
         <div class="card">
@@ -430,6 +512,7 @@
     </div>
     <div class="progress-row"><span class="count" id="progressCount">0 / 0 sudah diabsen</span></div>
     <div class="dots" id="progressDots"></div>
+    <div class="dot-legend" id="dotLegend"></div>
     <button class="manual-toggle" id="manualToggle">Ubah status / isi manual (Izin, Sakit, Alpa)</button>
     <div class="manual-grid" id="manualGrid"></div>
   </section>
@@ -468,7 +551,7 @@
     </div>
     <div class="qr-grid" id="qrGrid"></div>
     <div id="qrPrintArea" style="display:none;">
-      <h2 style="margin-bottom:12px;">Kartu QR — Kelas 3 SD Negeri 1 Barabai Timur</h2>
+      <h2 style="margin-bottom:12px;" id="qrTitle">Kartu QR</h2>
       <div class="qr-grid" id="qrGridPrint"></div>
     </div>
   </section>
@@ -479,6 +562,12 @@
       <h3 class="section-title">Tambah Siswa</h3>
       <input type="text" id="newStudentName" class="text-input" placeholder="Nama siswa baru">
       <button class="btn-primary" id="addStudentBtn" style="width:100%;">Tambah Siswa</button>
+    </div>
+    <div class="card" style="margin-bottom:14px;">
+      <h3 class="section-title">Tambah Banyak Siswa Sekaligus</h3>
+      <p class="scan-hint" style="text-align:left; margin:0 0 10px;">Tempel daftar nama, satu nama per baris (bisa salin langsung dari Excel/Word).</p>
+      <textarea id="bulkNames" class="text-input" rows="5" placeholder="Nama siswa 1&#10;Nama siswa 2&#10;Nama siswa 3"></textarea>
+      <button class="btn-primary" id="bulkAddBtn" style="width:100%;">Tambahkan Semua</button>
     </div>
     <div class="card">
       <h3 class="section-title">Daftar Siswa (<span id="studentCount">0</span>)</h3>
@@ -517,6 +606,16 @@
 
   <!-- SETTINGS TAB -->
   <section class="panel" id="panel-settings">
+    <div class="card" id="installCard" style="margin-bottom:14px;">
+      <h3 class="section-title">Pasang Aplikasi di Handphone</h3>
+      <p class="scan-hint" id="installHint" style="text-align:left; margin:0 0 12px;">Pasang agar ada ikon "Absen Kelas" di layar utama dan terbuka seperti aplikasi biasa.</p>
+      <button class="btn-primary" id="installBtn" style="width:100%; display:none;">Pasang Aplikasi</button>
+    </div>
+    <div class="card" style="margin-bottom:14px;">
+      <h3 class="section-title">Identitas Kelas</h3>
+      <p class="scan-hint" id="profileSummary" style="text-align:left; margin:0 0 12px;"></p>
+      <button class="btn-primary" id="editProfileBtn" style="width:100%;">Ubah Identitas Kelas</button>
+    </div>
     <div class="card" style="margin-bottom:14px;">
       <h3 class="section-title">Logo Aplikasi</h3>
       <div style="text-align:center; margin-bottom:12px;">
@@ -536,7 +635,7 @@
     </div>
     <div class="card">
       <h3 class="section-title">Hubungkan ke Google Sheets</h3>
-      <p class="scan-hint" style="text-align:left; margin:0 0 14px;">Tempel URL Web App (diakhiri /exec) dari Apps Script di sini agar absen tersimpan online dan bisa diakses dari perangkat lain.</p>
+      <p class="scan-hint" style="text-align:left; margin:0 0 14px;">Tempel URL Web App (diakhiri /exec) dari Apps Script milik kelas ini agar absen tersimpan online di Google Sheets kelas ini dan bisa diakses dari perangkat lain. Setiap kelas memakai Google Sheets sendiri.</p>
       <input type="text" id="sheetsUrlInput" class="text-input" placeholder="https://script.google.com/macros/s/.../exec">
       <button class="btn-primary" id="saveSheetsUrlBtn" style="width:100%;">Simpan & Hubungkan</button>
       <p class="scan-hint" id="sheetsStatus" style="text-align:left; margin-top:12px;"></p>
@@ -546,11 +645,11 @@
   <!-- ABOUT TAB -->
   <section class="panel" id="panel-about">
     <div class="card about-card">
-      <div class="appname">Absensi Online — Kelas 3</div>
-      <p style="font-size:12.5px; color:var(--muted); margin-top:8px;">SD Negeri 1 Barabai Timur</p>
+      <div class="appname" id="aboutName">Absen Online</div>
+      <p style="font-size:12.5px; color:var(--muted); margin-top:8px;" id="aboutSchool"></p>
       <p style="font-size:12.5px; color:var(--muted); margin-top:14px;">Scan QR, catat kehadiran, dan lihat rekap harian/bulanan secara otomatis — tersimpan di perangkat dan Google Sheets.</p>
       <div class="credit">Dibuat oleh Akhmad Fitra Harry, S.Pd</div>
-      <div class="credit-role">Wali Kelas 3</div>
+      <div class="credit-role">Wali Kelas 3 — SD Negeri 1 Barabai Timur</div>
     </div>
   </section>
 
@@ -583,13 +682,65 @@
   </div>
 </div>
 
+<div class="setup-overlay" id="setupOverlay">
+  <div class="setup-box">
+    <h2 id="setupTitle" style="margin-bottom:6px;">Pengaturan Awal Kelas</h2>
+    <p class="scan-hint" id="setupIntro" style="text-align:left; margin:0 0 14px;">Isi identitas kelas ini. Data disimpan di perangkat dan di Google Sheets kelas Anda.</p>
+    <label class="setup-label">Nama kelas *</label>
+    <input type="text" id="setupKelas" class="text-input" placeholder="contoh: Kelas 4A">
+    <label class="setup-label">Nama sekolah</label>
+    <input type="text" id="setupSekolah" class="text-input" placeholder="contoh: SD Negeri 1 Contoh">
+    <label class="setup-label">Nama guru / wali kelas</label>
+    <input type="text" id="setupGuru" class="text-input" placeholder="contoh: Siti Aminah, S.Pd">
+    <label class="setup-label">Sapaan di Beranda (opsional)</label>
+    <input type="text" id="setupSapaan" class="text-input" placeholder="contoh: Ibu Siti">
+    <label class="setup-label">Kota (untuk cuaca, opsional)</label>
+    <input type="text" id="setupKota" class="text-input" placeholder="contoh: Barabai">
+    <div id="setupRosterWrap">
+      <label class="setup-label">Daftar nama siswa (satu nama per baris)</label>
+      <textarea id="setupRoster" class="text-input" rows="6" placeholder="Nama siswa 1&#10;Nama siswa 2&#10;Nama siswa 3"></textarea>
+    </div>
+    <label class="setup-label">URL Google Sheets kelas ini (opsional, bisa diisi nanti)</label>
+    <input type="text" id="setupUrl" class="text-input" placeholder="https://script.google.com/macros/s/.../exec">
+    <button class="btn-primary" id="setupLoadBtn" style="width:100%; background:#555; margin-bottom:10px;">Muat data kelas dari Google Sheets</button>
+    <p class="scan-hint" id="setupMsg" style="text-align:left; margin:0 0 10px; min-height:16px;"></p>
+    <div style="display:flex; gap:10px;">
+      <button class="btn-primary" id="setupCancelBtn" style="flex:1; background:#555;">Batal</button>
+      <button class="btn-primary" id="setupSaveBtn" style="flex:2;">Simpan &amp; Mulai</button>
+    </div>
+  </div>
+</div>
+
+<div class="design-credit">Design by Akhmad Fitra Harry, S.Pd</div>
 <script>
 window.addEventListener("error", (e)=>{
   console.error("Error tidak tertangani:", e.error || e.message);
 });
 try {
-const CODE_PREFIX = "ABSEN3SDN1BT-";
-const DEFAULT_STUDENT_NAMES = [
+let CODE_PREFIX = "ABSEN-";
+const LEGACY_PROFILE = { kelas:"Kelas 3", sekolah:"SD Negeri 1 Barabai Timur", guru:"Akhmad Fitra Harry, S.Pd", sapaan:"Bapak Fitra", kota:"Barabai", lat:-2.583, lon:115.383, prefix:"ABSEN3SDN1BT-" };
+function saveProfileObj(p){ try{ localStorage.setItem("classProfile", JSON.stringify(p)); }catch(e){} }
+function hasLegacyData(){
+  try{
+    if(localStorage.getItem("studentsRoster") || localStorage.getItem("sheetsUrl")) return true;
+    for(let i=0;i<localStorage.length;i++){ const k = localStorage.key(i); if(k && k.startsWith("absensi:")) return true; }
+  }catch(e){}
+  return false;
+}
+function loadProfile(){
+  try{
+    const raw = localStorage.getItem("classProfile");
+    if(raw){ const p = JSON.parse(raw); if(p && p.kelas) return p; }
+  }catch(e){}
+  if(hasLegacyData()){ saveProfileObj(LEGACY_PROFILE); return { ...LEGACY_PROFILE }; }
+  return null;
+}
+let PROFILE = loadProfile();
+if(PROFILE && PROFILE.prefix) CODE_PREFIX = PROFILE.prefix;
+function profileView(){ return PROFILE || { kelas:"Kelas", sekolah:"", guru:"", sapaan:"", kota:"" }; }
+function escHtml(t){ return String(t).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function slugName(t){ return String(t||"Kelas").trim().replace(/[^A-Za-z0-9]+/g,"") || "Kelas"; }
+const LEGACY_KELAS3_NAMES = [
   "Ahmad Bilal Al Jamil","Arsyla Romeesa","Azkia Syifa Riannur","Fairuz Nasyita Ramadhani",
   "Kaisya Dwinda","Muhammad Azril","Muhammad Azzam Kholid","Muhammad Hakan Arroya",
   "Muhammad Mujadid Fikri","Muhammad Rafa Reynandra","Muhammad Rakha Raffasya",
@@ -696,7 +847,8 @@ function loadRoster(){
     const raw = localStorage.getItem("studentsRoster");
     if(raw){ const parsed = JSON.parse(raw); if(Array.isArray(parsed) && parsed.length) return parsed; }
   }catch(e){}
-  return DEFAULT_STUDENT_NAMES.map((name,i)=>({ id:i+1, name }));
+  if(PROFILE && PROFILE.prefix === LEGACY_PROFILE.prefix) return LEGACY_KELAS3_NAMES.map((name,i)=>({ id:i+1, name }));
+  return [];
 }
 function saveRoster(){
   try{ localStorage.setItem("studentsRoster", JSON.stringify(STUDENTS)); }catch(e){}
@@ -732,6 +884,7 @@ function afterRosterChange(){
   renderProgress();
   renderManualGrid();
   populateManualSelect("keluar");
+  try{ syncConfigToSheet(); }catch(e){}
 }
 
 function relocateScanZone(){
@@ -759,6 +912,15 @@ const KELUAR_CONFIG = {
 function pad(n){ return n<10 ? "0"+n : ""+n; }
 function toDateKey(d){ return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
 function todayKey(){ return toDateKey(new Date()); }
+// tanggal yang sedang diabsen di tab Scan Absen (null = otomatis mengikuti hari ini)
+let scanDateOverride = null;
+function scanDate(){ return scanDateOverride || todayKey(); }
+function isScanToday(){ return scanDate() === todayKey(); }
+function scanDateShort(key){
+  const n = ["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","Nov","Des"];
+  const d = new Date(`${key}T00:00:00`);
+  return `${d.getDate()} ${n[d.getMonth()]}`;
+}
 
 function formatIndoDate(d){
   const hari = ["Minggu","Senin","Selasa","Rabu","Kamis","Jumat","Sabtu"];
@@ -792,6 +954,7 @@ document.querySelectorAll(".side-item").forEach(btn=>{
     if(btn.dataset.tab === "home") renderHome();
     if(btn.dataset.tab === "siswa") renderStudentManageList();
     if(btn.dataset.tab === "scan"){
+      refreshScanState();
       stopKeluarScanner();
       relocateScanZone();
       autoStartScanner();
@@ -868,9 +1031,13 @@ async function listDateKeys(prefix){
 async function loadWeatherWidget(){
   const el = document.getElementById("weatherWidget");
   if(!el) return;
+  const p = profileView();
+  const wCard = document.getElementById("weatherCard");
+  if(!p.lat || !p.lon){ if(wCard) wCard.style.display = "none"; return; }
+  if(wCard) wCard.style.display = "";
   let tempCard = "";
   try{
-    const wRes = await fetch("https://api.open-meteo.com/v1/forecast?latitude=-2.583&longitude=115.383&current=temperature_2m,relative_humidity_2m,apparent_temperature&timezone=Asia%2FMakassar");
+    const wRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${p.lat}&longitude=${p.lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature&timezone=auto`);
     const w = await wRes.json();
     const temp = Math.round(w.current.temperature_2m);
     const feels = Math.round(w.current.apparent_temperature);
@@ -882,7 +1049,8 @@ async function loadWeatherWidget(){
   }catch(e){}
 
   let aqiCard = "";
-  try{
+  const isHst = /barabai|hulu sungai tengah|\bhst\b/i.test(p.kota || "");
+  if(isHst) try{
     const res = await fetch("https://disdik.hstkab.go.id/udara-hst");
     const html = await res.text();
     const ispuMatch = html.match(/PANTAUAN ISPU:\s*<\/?\w*>?\s*(\d+)/i) || html.match(/(\d{1,3})\s*<\/?\w*>?\s*KATEGORI/i);
@@ -899,7 +1067,7 @@ async function loadWeatherWidget(){
     }
   }catch(e){}
 
-  if(!aqiCard){
+  if(isHst && !aqiCard){
     aqiCard = `<div class="stat-card" style="background:var(--muted); grid-column:1/-1;">
       <span class="l">Data ISPU resmi tidak bisa diambil otomatis oleh browser.</span>
       <a href="https://disdik.hstkab.go.id/udara-hst" target="_blank" rel="noopener" style="display:inline-block; margin-top:8px; color:#fff; font-weight:700; text-decoration:underline;">Buka Data Resmi Disdik HST →</a>
@@ -986,11 +1154,89 @@ async function renderHome(){
 
 // ---------- scan tab ----------
 async function refreshScanState(){
-  currentAttendance = await loadAttendance(todayKey());
+  const key = scanDate();
+  currentAttendance = await loadAttendance(key);
   renderProgress();
   renderManualGrid();
+  renderScanDateUI();
+  mergeSheetIntoScan(key);
+}
+// lengkapi dengan data dari Google Sheets (mis. diabsen dari perangkat lain)
+async function mergeSheetIntoScan(key){
+  if(!getSheetsUrl()) return;
+  const rows = await fetchFromSheet({ tanggal:key });
+  if(!rows || key !== scanDate()) return;
+  let changed = false;
+  rows.forEach(r=>{
+    const id = Number(r.id);
+    if(STATUS[r.status] && STUDENTS.some(s=>s.id===id) && !currentAttendance[id]){ currentAttendance[id] = r.status; changed = true; }
+  });
+  if(changed){ renderProgress(); renderManualGrid(); }
+}
+function renderScanDateUI(){
+  const inp = document.getElementById("scanDateInput");
+  inp.max = todayKey(); inp.value = scanDate();
+  const banner = document.getElementById("scanDateBanner");
+  if(isScanToday()){ banner.style.display = "none"; }
+  else{ banner.style.display = ""; banner.textContent = `⚠ Mengabsen untuk ${formatTanggalIndo(scanDate())} (bukan hari ini)`; }
+  const hint = document.getElementById("scanZoneHint");
+  if(hint) hint.textContent = isScanToday()
+    ? "Arahkan kamera ke kartu QR siswa — otomatis tercatat Hadir"
+    : `Arahkan kamera ke kartu QR siswa — otomatis tercatat Hadir pada ${scanDateShort(scanDate())}`;
+  renderMissedDays();
+}
+function renderMissedDays(){
+  const box = document.getElementById("missedDays");
+  box.innerHTML = "";
+  let earliest = null;
+  try{
+    for(let i=0;i<localStorage.length;i++){
+      const k = localStorage.key(i);
+      if(k && k.startsWith("absensi:")){ const d = k.slice(8); if(/^\d{4}-\d{2}-\d{2}$/.test(d) && (!earliest || d < earliest)) earliest = d; }
+    }
+  }catch(e){}
+  if(!earliest) return;
+  const missed = [];
+  const now = new Date();
+  for(let i=1;i<=21 && missed.length<10;i++){
+    const x = new Date(now.getFullYear(), now.getMonth(), now.getDate()-i);
+    const dow = x.getDay();
+    if(dow===0 || dow===6) continue;
+    const key = toDateKey(x);
+    if(key < earliest || HOLIDAYS_2026[key]) continue;
+    let has = false;
+    try{ const raw = localStorage.getItem(`absensi:${key}`); has = !!raw && raw !== "{}"; }catch(e){}
+    if(!has) missed.push(key);
+  }
+  if(!missed.length) return;
+  const lbl = document.createElement("span");
+  lbl.textContent = "Terlewat, belum ada absen:";
+  box.appendChild(lbl);
+  missed.forEach(key=>{
+    const b = document.createElement("button");
+    b.className = "missed-chip";
+    const d = new Date(`${key}T00:00:00`);
+    b.textContent = `${["Min","Sen","Sel","Rab","Kam","Jum","Sab"][d.getDay()]} ${scanDateShort(key)}`;
+    b.addEventListener("click", ()=>{ scanDateOverride = key; refreshScanState(); });
+    box.appendChild(b);
+  });
+}
+document.getElementById("scanDateInput").addEventListener("change", (e)=>{
+  const v = e.target.value;
+  if(!v){ renderScanDateUI(); return; }
+  if(v > todayKey()){ showToast("Tanggal tidak boleh melewati hari ini"); scanDateOverride = null; }
+  else scanDateOverride = (v === todayKey()) ? null : v;
+  refreshScanState();
+});
+document.getElementById("scanDateTodayBtn").addEventListener("click", ()=>{ scanDateOverride = null; refreshScanState(); });
+function renderDotLegend(){
+  const el = document.getElementById("dotLegend");
+  if(!el || el.childElementCount) return;
+  el.innerHTML = ["hadir","izin","sakit","alpa"].map(k=>`<span><i style="background:${STATUS_HEX[k]}"></i>${STATUS[k].label}</span>`).join("")
+    + `<span><i style="background:#555"></i>Belum diabsen</span>`;
 }
 function renderProgress(){
+  renderDotLegend();
   const doneCount = STUDENTS.filter(s=>currentAttendance[s.id]).length;
   document.getElementById("progressCount").textContent = `${doneCount} / ${STUDENTS.length} sudah diabsen`;
   const dots = document.getElementById("progressDots");
@@ -999,7 +1245,12 @@ function renderProgress(){
     const d = document.createElement("div");
     d.className = "dot";
     const st = currentAttendance[s.id];
-    if(st){ d.style.background = STATUS_HEX[st]; d.textContent = s.name.split(" ").map(w=>w[0]).slice(0,2).join(""); }
+    if(st){
+      d.classList.add("done");
+      d.style.background = STATUS_HEX[st]; d.style.color = "#0e1b22";
+      d.style.boxShadow = `0 0 0 3px ${STATUS_HEX[st]}66, 0 3px 5px rgba(0,0,0,.35)`;
+      d.textContent = s.name.split(" ").map(w=>w[0]).slice(0,2).join("");
+    }
     else{ d.textContent = s.name[0]; }
     d.title = s.name + (st ? ` — ${STATUS[st].label}` : "");
     dots.appendChild(d);
@@ -1011,8 +1262,13 @@ function renderManualGrid(){
   STUDENTS.forEach(s=>{
     const b = document.createElement("button");
     const st = currentAttendance[s.id];
-    b.textContent = st ? `${s.name} · ${STATUS[st].label}` : s.name;
-    if(st) b.classList.add("done");
+    b.textContent = st ? `✓ ${s.name} · ${STATUS[st].label}` : s.name;
+    if(st){
+      b.classList.add("done");
+      b.style.background = STATUS_HEX[st]; b.style.borderColor = STATUS_HEX[st];
+      b.style.color = "#0e1b22"; b.style.fontWeight = "800";
+      b.style.boxShadow = "0 4px 0 rgba(0,0,0,.28)";
+    }
     b.addEventListener("click", ()=> openSheet(s.id));
     grid.appendChild(b);
   });
@@ -1033,7 +1289,7 @@ function openSheet(studentId){
   if(!s) return;
   document.getElementById("sheetName").textContent = s.name;
   const st = currentAttendance[studentId];
-  document.getElementById("sheetCurrent").textContent = st ? `Status saat ini: ${STATUS[st].label}` : "Belum diabsen hari ini";
+  document.getElementById("sheetCurrent").textContent = st ? `Status saat ini: ${STATUS[st].label}` : (isScanToday() ? "Belum diabsen hari ini" : `Belum diabsen pada ${formatTanggalIndo(scanDate())}`);
   document.getElementById("overlay").classList.add("show");
 }
 function closeSheet(){
@@ -1047,13 +1303,15 @@ document.querySelectorAll(".status-btn").forEach(btn=>{
   btn.addEventListener("click", async ()=>{
     if(activeStudentId==null) return;
     const status = btn.dataset.status;
+    const dk = scanDate();
     const prevValue = currentAttendance[activeStudentId];
     currentAttendance[activeStudentId] = status;
     const s = STUDENTS.find(x=>x.id===activeStudentId);
-    const ok = await saveAttendance(todayKey(), currentAttendance);
+    const ok = await saveAttendance(dk, currentAttendance);
     if(ok){
-      showToast(`${s.name} — ${STATUS[status].label} tersimpan`);
-      postToSheet({ tanggal: todayKey(), id: activeStudentId, nama: s.name, status });
+      showToast(`${s.name} — ${STATUS[status].label} tersimpan${dk === todayKey() ? "" : " (" + scanDateShort(dk) + ")"}`);
+      postToSheet({ tanggal: dk, id: activeStudentId, nama: s.name, status });
+      renderMissedDays(); try{ renderCalendar(); }catch(e){}
     }else{
       if(prevValue === undefined) delete currentAttendance[activeStudentId];
       else currentAttendance[activeStudentId] = prevValue;
@@ -1435,12 +1693,14 @@ function playBeep(){
 }
 
 async function quickMarkHadir(id, s){
+  const dk = scanDate();
   currentAttendance[id] = "hadir";
-  const ok = await saveAttendance(todayKey(), currentAttendance);
+  const ok = await saveAttendance(dk, currentAttendance);
   if(ok){
     playBeep();
-    showToast(`${s.name} — Hadir tersimpan`);
-    postToSheet({ tanggal: todayKey(), id, nama: s.name, status:"hadir" });
+    showToast(`${s.name} — Hadir tersimpan${dk === todayKey() ? "" : " (" + scanDateShort(dk) + ")"}`);
+    postToSheet({ tanggal: dk, id, nama: s.name, status:"hadir" });
+    renderMissedDays(); try{ renderCalendar(); }catch(e){}
   }else{
     delete currentAttendance[id];
     showToast("Gagal menyimpan, coba scan ulang");
@@ -1650,7 +1910,7 @@ function formatBulanIndo(monthKey){
   return `${BULAN_NAMES[parseInt(parts[1],10)-1]} ${parts[0]}`;
 }
 document.getElementById("downloadDailyBtn").addEventListener("click", ()=>{
-  let csv = "Rekap Absensi Harian - Kelas 3 SD Negeri 1 Barabai Timur\n";
+  let csv = `Rekap Absensi Harian - ${profileView().kelas} ${profileView().sekolah}`.trim() + "\n";
   csv += `Tanggal,${formatTanggalIndo(lastDailyDateKey)}\n`;
   csv += "\n";
   csv += "No,Nama,Status,Waktu\n";
@@ -1658,10 +1918,10 @@ document.getElementById("downloadDailyBtn").addEventListener("click", ()=>{
     const st = lastDailyData[s.id];
     csv += `${i+1},"${s.name}",${st ? STATUS[st].label : "Belum absen"},${lastDailyTimes[s.id] || "-"}\n`;
   });
-  downloadCSV(`Absensi_Kelas3_${lastDailyDateKey}.csv`, csv);
+  downloadCSV(`Absensi_${slugName(profileView().kelas)}_${lastDailyDateKey}.csv`, csv);
 });
 document.getElementById("downloadMonthlyBtn").addEventListener("click", ()=>{
-  let csv = "Rekap Absensi Bulanan - Kelas 3 SD Negeri 1 Barabai Timur\n";
+  let csv = `Rekap Absensi Bulanan - ${profileView().kelas} ${profileView().sekolah}`.trim() + "\n";
   csv += `Bulan,${formatBulanIndo(lastMonthlyKey)}\n`;
   csv += "\n";
   csv += "No,Nama,Hadir,Izin,Sakit,Alpa\n";
@@ -1669,7 +1929,7 @@ document.getElementById("downloadMonthlyBtn").addEventListener("click", ()=>{
     const c = lastMonthlyPerStudent[s.id] || { hadir:0, izin:0, sakit:0, alpa:0 };
     csv += `${i+1},"${s.name}",${c.hadir},${c.izin},${c.sakit},${c.alpa}\n`;
   });
-  downloadCSV(`Rekap_Bulanan_Kelas3_${lastMonthlyKey}.csv`, csv);
+  downloadCSV(`Rekap_Bulanan_${slugName(profileView().kelas)}_${lastMonthlyKey}.csv`, csv);
 });
 
 // ---------- settings ----------
@@ -1680,10 +1940,7 @@ function updateSheetsStatusLabel(){
 document.getElementById("sheetsUrlInput").value = getSheetsUrl();
 updateSheetsStatusLabel();
 document.getElementById("saveSheetsUrlBtn").addEventListener("click", ()=>{
-  const val = document.getElementById("sheetsUrlInput").value.trim();
-  setSheetsUrl(val);
-  updateSheetsStatusLabel();
-  showToast(val ? "Terhubung ke Google Sheets" : "Koneksi Google Sheets dihapus");
+  connectSheets(document.getElementById("sheetsUrlInput").value.trim());
 });
 
 // ---------- logo aplikasi ----------
@@ -1739,6 +1996,200 @@ document.getElementById("themePastelBtn").addEventListener("click", ()=> applyTh
 document.getElementById("themeModernBtn").addEventListener("click", ()=> applyTheme("modern"));
 applyTheme(loadThemePreference());
 
+// ---------- identitas kelas, setup awal & sinkron konfigurasi ----------
+function applyProfile(){
+  const p = profileView();
+  const kelas = p.kelas || "Kelas", sekolah = p.sekolah || "";
+  const setText = (id, t)=>{ const el = document.getElementById(id); if(el) el.textContent = t; };
+  document.title = `Absen ${kelas}${sekolah ? " " + sekolah : ""}`;
+  setText("topbarTitle", `Absen ${kelas}`);
+  setText("pGuru", p.guru || "Nama Guru");
+  setText("pPeran", `Wali ${kelas}`);
+  const foot = document.getElementById("sidebarFooter");
+  if(foot) foot.innerHTML = `Absen ${escHtml(kelas)} ${escHtml(sekolah)}<br>Design by Akhmad Fitra Harry, S.Pd`;
+  setText("greetSchool", sekolah);
+  setText("greetTitle", `Selamat datang, ${p.sapaan || p.guru || "Bapak/Ibu Guru"} 👋`);
+  setText("qrTitle", `Kartu QR — ${kelas} ${sekolah}`.trim());
+  setText("aboutName", `Absen Online — ${kelas}`);
+  setText("aboutSchool", sekolah);
+  setText("weatherTitle", `Cuaca & Kualitas Udara${p.kota ? " — " + p.kota : ""}`);
+  setText("profileSummary", PROFILE ? `${kelas}${sekolah ? " · " + sekolah : ""}${p.guru ? " · " + p.guru : ""}${p.kota ? " · " + p.kota : ""}` : "Identitas kelas belum diisi.");
+}
+
+function randomPrefix(){
+  const ch = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let t = ""; for(let i=0;i<4;i++) t += ch[Math.floor(Math.random()*ch.length)];
+  return `ABSEN-${t}-`;
+}
+async function geocodeKota(kota){
+  try{
+    const r = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(kota)}&count=1&language=id`);
+    const j = await r.json();
+    if(j.results && j.results[0]) return { lat:j.results[0].latitude, lon:j.results[0].longitude };
+  }catch(e){}
+  return null;
+}
+async function fetchConfig(url){
+  try{
+    const res = await fetch(`${url}?config=1`);
+    if(!res.ok) return null;
+    return await res.json();
+  }catch(e){ return null; }
+}
+let cfgOkUrl = null;
+async function scriptSupportsConfig(){
+  const url = getSheetsUrl();
+  if(!url) return false;
+  if(cfgOkUrl === url) return true;
+  const cfg = await fetchConfig(url);
+  if(cfg && !Array.isArray(cfg)){ cfgOkUrl = url; return true; }
+  return false;
+}
+let syncTimer = null;
+function syncConfigToSheet(){
+  if(!getSheetsUrl() || !PROFILE) return;
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(async ()=>{
+    if(!(await scriptSupportsConfig())) return;
+    const p = PROFILE;
+    const ok = await postToSheet({
+      jenis:"config",
+      profile:{ kelas:p.kelas, sekolah:p.sekolah||"", guru:p.guru||"", sapaan:p.sapaan||"", kota:p.kota||"", prefix:p.prefix },
+      roster: STUDENTS.map(s=>({ id:s.id, name:s.name }))
+    });
+    if(ok){ try{ localStorage.setItem("configSynced","1"); }catch(e){} }
+  }, 700);
+}
+function sameRoster(a, b){
+  if(a.length !== b.length) return false;
+  return a.every((x,i)=> String(x.name) === String(b[i].name));
+}
+async function adoptSheetConfig(cfg){
+  const roster = (cfg.roster || []).map((r,i)=>({ id: Number.isFinite(Number(r.id)) && Number(r.id) > 0 ? Number(r.id) : i+1, name:String(r.name) }));
+  if(roster.length){
+    STUDENTS = roster; saveRoster();
+    setNextId(roster.reduce((m,s)=>Math.max(m,s.id),0) + 1);
+  }
+  if(cfg.profile && cfg.profile.kelas){
+    const old = PROFILE || {};
+    const np = { ...cfg.profile, prefix: cfg.profile.prefix || old.prefix || randomPrefix(), lat:null, lon:null };
+    if(old.kota && old.kota === np.kota){ np.lat = old.lat; np.lon = old.lon; }
+    else if(np.kota){ const g = await geocodeKota(np.kota); if(g){ np.lat = g.lat; np.lon = g.lon; } }
+    PROFILE = np; saveProfileObj(np); CODE_PREFIX = np.prefix;
+  }
+  for(const fn of [applyProfile, afterRosterChange, renderHome, loadWeatherWidget]){
+    try{ await fn(); }catch(err){ console.error("Gagal menyegarkan tampilan:", err); }
+  }
+}
+async function connectSheets(url){
+  setSheetsUrl(url); updateSheetsStatusLabel();
+  if(!url){ showToast("Koneksi Google Sheets dihapus"); return; }
+  showToast("Menghubungkan ke Google Sheets...");
+  const cfg = await fetchConfig(url);
+  if(!cfg || Array.isArray(cfg)){
+    showToast("Terhubung, tetapi Apps Script belum versi terbaru. Tempel ulang script terbaru lalu Deploy versi baru.");
+    return;
+  }
+  cfgOkUrl = url;
+  const sheetRoster = Array.isArray(cfg.roster) ? cfg.roster : [];
+  if(sheetRoster.length && STUDENTS.length === 0){
+    await adoptSheetConfig(cfg); showToast("Data kelas dimuat dari Google Sheets"); return;
+  }
+  if(sheetRoster.length && !sameRoster(sheetRoster, STUDENTS)){
+    const nm = cfg.profile && cfg.profile.kelas ? ` (${cfg.profile.kelas})` : "";
+    if(confirm(`Google Sheets ini sudah berisi ${sheetRoster.length} siswa${nm}.\n\nOK = pakai data dari Google Sheets\nBatal = timpa Google Sheets dengan data di perangkat ini`)){
+      await adoptSheetConfig(cfg); showToast("Data kelas dimuat dari Google Sheets"); return;
+    }
+  }
+  syncConfigToSheet();
+  showToast("Terhubung ke Google Sheets");
+}
+
+let setupFirstRun = false, setupPendingPrefix = null, setupLoadedRoster = null;
+function openSetup(first){
+  setupFirstRun = first; setupPendingPrefix = null; setupLoadedRoster = null;
+  const p = PROFILE || {};
+  const $ = id => document.getElementById(id);
+  $("setupKelas").value = p.kelas || ""; $("setupSekolah").value = p.sekolah || "";
+  $("setupGuru").value = p.guru || ""; $("setupSapaan").value = p.sapaan || ""; $("setupKota").value = p.kota || "";
+  $("setupUrl").value = getSheetsUrl(); $("setupMsg").textContent = "";
+  $("setupRoster").value = first ? STUDENTS.map(s=>s.name).join("\n") : "";
+  $("setupRosterWrap").style.display = first ? "" : "none";
+  $("setupCancelBtn").style.display = first ? "none" : "";
+  $("setupTitle").textContent = first ? "Pengaturan Awal Kelas" : "Ubah Identitas Kelas";
+  $("setupIntro").style.display = first ? "" : "none";
+  $("setupOverlay").classList.add("open");
+}
+function closeSetup(){ document.getElementById("setupOverlay").classList.remove("open"); }
+
+document.getElementById("setupLoadBtn").addEventListener("click", async ()=>{
+  const $ = id => document.getElementById(id);
+  const url = $("setupUrl").value.trim();
+  if(!url){ $("setupMsg").textContent = "Isi dulu URL Google Sheets (diakhiri /exec)."; return; }
+  $("setupMsg").textContent = "Memuat...";
+  const cfg = await fetchConfig(url);
+  if(!cfg || Array.isArray(cfg)){ $("setupMsg").textContent = "Gagal memuat. Pastikan URL benar dan Apps Script sudah versi terbaru yang di-Deploy."; return; }
+  const hasRoster = Array.isArray(cfg.roster) && cfg.roster.length;
+  if(!cfg.profile && !hasRoster){ $("setupMsg").textContent = "Google Sheets ini masih kosong (kelas baru). Isi data kelas di atas lalu tekan Simpan."; return; }
+  const p = cfg.profile || {};
+  if(p.kelas){ $("setupKelas").value = p.kelas; $("setupSekolah").value = p.sekolah || ""; $("setupGuru").value = p.guru || ""; $("setupSapaan").value = p.sapaan || ""; $("setupKota").value = p.kota || ""; }
+  setupPendingPrefix = p.prefix || null;
+  if(hasRoster && setupFirstRun){
+    setupLoadedRoster = cfg.roster;
+    $("setupRoster").value = cfg.roster.map(r=>r.name).join("\n");
+  }
+  $("setupMsg").textContent = `Data dimuat${hasRoster ? " (" + cfg.roster.length + " siswa)" : ""}. Periksa lalu tekan Simpan.`;
+});
+document.getElementById("setupCancelBtn").addEventListener("click", closeSetup);
+document.getElementById("editProfileBtn").addEventListener("click", ()=> openSetup(false));
+document.getElementById("setupSaveBtn").addEventListener("click", async ()=>{
+  const $ = id => document.getElementById(id);
+  const kelas = $("setupKelas").value.trim();
+  if(!kelas){ $("setupMsg").textContent = "Nama kelas wajib diisi."; return; }
+  const btn = $("setupSaveBtn"); btn.disabled = true; $("setupMsg").textContent = "Menyimpan...";
+  const old = PROFILE;
+  const kota = $("setupKota").value.trim();
+  const np = {
+    kelas, sekolah:$("setupSekolah").value.trim(), guru:$("setupGuru").value.trim(),
+    sapaan:$("setupSapaan").value.trim(), kota,
+    prefix: (old && old.prefix) || setupPendingPrefix || randomPrefix(),
+    lat:null, lon:null
+  };
+  if(old && old.kota === kota){ np.lat = old.lat; np.lon = old.lon; }
+  else if(kota){ const g = await geocodeKota(kota); if(g){ np.lat = g.lat; np.lon = g.lon; } }
+  PROFILE = np; saveProfileObj(np); CODE_PREFIX = np.prefix;
+
+  if(setupFirstRun){
+    const text = $("setupRoster").value;
+    const lines = text.split(/\r?\n/).map(t=>t.trim()).filter(Boolean);
+    if(setupLoadedRoster && sameRoster(setupLoadedRoster, lines.map(n=>({name:n})))){
+      STUDENTS = setupLoadedRoster.map((r,i)=>({ id: Number(r.id) || i+1, name:String(r.name) }));
+    }else{
+      STUDENTS = lines.map((name,i)=>({ id:i+1, name }));
+    }
+    saveRoster();
+    setNextId(STUDENTS.reduce((m,s)=>Math.max(m,s.id),0) + 1);
+  }
+  const url = $("setupUrl").value.trim();
+  if(url !== getSheetsUrl()){ setSheetsUrl(url); document.getElementById("sheetsUrlInput").value = url; updateSheetsStatusLabel(); }
+  btn.disabled = false; closeSetup();
+  for(const fn of [applyProfile, afterRosterChange, renderHome, loadWeatherWidget, syncConfigToSheet]){
+    try{ await fn(); }catch(err){ console.error("Gagal menyegarkan tampilan:", err); }
+  }
+  showToast("Identitas kelas disimpan");
+});
+
+document.getElementById("bulkAddBtn").addEventListener("click", ()=>{
+  const ta = document.getElementById("bulkNames");
+  const names = ta.value.split(/\r?\n/).map(t=>t.trim()).filter(Boolean);
+  if(!names.length){ showToast("Tempel dulu daftar nama siswa"); return; }
+  let id = getNextId();
+  names.forEach(name=>{ STUDENTS.push({ id, name }); id++; });
+  setNextId(id); saveRoster(); afterRosterChange();
+  ta.value = "";
+  showToast(`${names.length} siswa ditambahkan`);
+});
+
 // ---------- init ----------
 document.getElementById("recapDate").value = todayKey();
 document.getElementById("recapDate").addEventListener("change", (e)=> renderRecap(e.target.value));
@@ -1762,7 +2213,43 @@ async function initApp(){
   await safeStep("populateManualSelect-keluar", ()=>populateManualSelect("keluar"));
   await safeStep("renderLogToday-keluar", ()=>renderLogToday("keluar"));
 }
+// ---------- pasang aplikasi (PWA) ----------
+let deferredInstall = null;
+const isStandalone = (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || window.navigator.standalone === true;
+const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
+window.addEventListener("beforeinstallprompt", (e)=>{
+  e.preventDefault(); deferredInstall = e;
+  document.getElementById("installBtn").style.display = "";
+});
+window.addEventListener("appinstalled", ()=>{
+  deferredInstall = null; document.getElementById("installBtn").style.display = "none";
+  document.getElementById("installHint").textContent = "Aplikasi sudah terpasang di layar utama.";
+});
+document.getElementById("installBtn").addEventListener("click", async ()=>{
+  if(!deferredInstall) return;
+  deferredInstall.prompt();
+  try{ await deferredInstall.userChoice; }catch(e){}
+  deferredInstall = null; document.getElementById("installBtn").style.display = "none";
+});
+if(isStandalone){
+  document.getElementById("installHint").textContent = "Aplikasi sudah terpasang dan sedang dibuka sebagai aplikasi.";
+}else if(isIos){
+  document.getElementById("installHint").textContent = "iPhone/iPad: buka lewat Safari, ketuk tombol Bagikan, lalu pilih \"Tambahkan ke Layar Utama\".";
+}else{
+  document.getElementById("installHint").textContent = "Android: ketuk tombol Pasang Aplikasi di bawah. Jika tombol belum muncul, buka menu ⋮ browser lalu pilih \"Instal aplikasi\" atau \"Tambahkan ke layar utama\".";
+}
+if("serviceWorker" in navigator && location.protocol.startsWith("http")){
+  navigator.serviceWorker.register("sw.js").catch(()=>{});
+}
+
+applyProfile();
 initApp();
+if(!PROFILE){ openSetup(true); }
+else if(getSheetsUrl()){
+  try{
+    if(!localStorage.getItem("configSynced")) syncConfigToSheet();
+  }catch(e){}
+}
 } catch(err) {
   console.error("Aplikasi gagal memuat sepenuhnya:", err);
   const banner = document.createElement("div");
