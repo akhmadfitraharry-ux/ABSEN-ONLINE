@@ -398,6 +398,11 @@
   .dot-legend span{ display:inline-flex; align-items:center; gap:5px; font-weight:700; }
   .dot-legend i{ width:12px; height:12px; border-radius:3px; display:inline-block; }
 
+  .bulk-card{ margin-top:14px; }
+  .bulk-row{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px; }
+  .bulk-row select{ flex:1; min-width:110px; padding:11px 12px; border:1.5px solid var(--line); border-radius:8px; background:var(--input-bg); color:var(--ink); font-size:15px; font-weight:700; font-family:inherit; }
+  .bulk-row .btn-primary{ flex:2; min-width:170px; }
+
   /* ---------- Setup kelas ---------- */
   textarea.text-input{
     width:100%; padding:13px 14px; border:1.5px solid var(--line); border-radius:8px; font-size:15px;
@@ -519,7 +524,21 @@
     <div class="progress-row"><span class="count" id="progressCount">0 / 0 sudah diabsen</span></div>
     <div class="dots" id="progressDots"></div>
     <div class="dot-legend" id="dotLegend"></div>
-    <button class="manual-toggle" id="manualToggle">Ubah status / isi manual (Izin, Sakit, Alpa)</button>
+    <div class="card bulk-card" id="bulkCard">
+      <h3 class="section-title">Absen Semua</h3>
+      <p class="scan-hint" style="text-align:left; margin:0 0 12px;">Cocok untuk hari yang terlewat: isi semua siswa sekaligus, lalu ubah siswa yang berbeda lewat daftar nama di bawah. Siswa yang sudah diabsen tidak ditimpa, kecuali Bapak pilih "Ubah semua".</p>
+      <div class="bulk-row">
+        <select id="bulkStatus">
+          <option value="hadir">Hadir</option>
+          <option value="izin">Izin</option>
+          <option value="sakit">Sakit</option>
+          <option value="alpa">Alpa</option>
+        </select>
+        <button class="btn-primary" id="bulkFillBtn">Absen yang belum diabsen</button>
+      </div>
+      <button class="btn-primary" id="bulkAllBtn" style="width:100%; background:#555;">Ubah semua siswa ke status ini</button>
+    </div>
+    <button class="manual-toggle" id="manualToggle">Ubah status siswa satu per satu (Hadir, Izin, Sakit, Alpa)</button>
     <div class="manual-grid" id="manualGrid"></div>
   </section>
 
@@ -616,6 +635,17 @@
       <h3 class="section-title">Pasang Aplikasi di Handphone</h3>
       <p class="scan-hint" id="installHint" style="text-align:left; margin:0 0 12px;">Pasang agar ada ikon "Absen Kelas" di layar utama dan terbuka seperti aplikasi biasa.</p>
       <button class="btn-primary" id="installBtn" style="width:100%; display:none;">Pasang Aplikasi</button>
+    </div>
+    <div class="card" id="backupCard" style="margin-bottom:14px;">
+      <h3 class="section-title">Cadangan Data</h3>
+      <p class="scan-hint" id="backupInfo" style="text-align:left; margin:0 0 10px;"></p>
+      <p class="scan-hint" style="text-align:left; margin:0 0 12px;">Simpan semua data (absen, daftar siswa, identitas kelas, pengaturan) ke satu file. Untuk membuka di handphone lain: kirim file cadangan ke handphone itu, lalu pilih "Pulihkan dari file cadangan". Jaga kerahasiaan file ini karena berisi URL Google Sheets kelas.</p>
+      <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px;">
+        <button class="btn-primary" id="backupDownloadBtn" style="flex:1; min-width:150px;">Unduh Cadangan</button>
+        <button class="btn-primary" id="backupShareBtn" style="flex:1; min-width:150px; background:#555; display:none;">Kirim Cadangan</button>
+      </div>
+      <button class="btn-primary" id="backupRestoreBtn" style="width:100%; background:#555;">Pulihkan dari file cadangan</button>
+      <input type="file" id="backupFileInput" accept=".json,application/json" style="display:none;">
     </div>
     <div class="card" style="margin-bottom:14px;">
       <h3 class="section-title">Identitas Kelas</h3>
@@ -983,6 +1013,7 @@ document.querySelectorAll(".side-item").forEach(btn=>{
     if(btn.dataset.tab === "monthly") renderMonthlyRecap(document.getElementById("monthlyDate").value);
     if(btn.dataset.tab === "home") renderHome();
     if(btn.dataset.tab === "siswa") renderStudentManageList();
+    if(btn.dataset.tab === "settings") updateBackupInfo();
     if(btn.dataset.tab === "scan"){
       refreshScanState();
       stopKeluarScanner();
@@ -2068,6 +2099,53 @@ async function fetchConfig(url){
   }catch(e){ return null; }
 }
 let cfgOkUrl = null;
+let batchOkUrl = null;
+async function scriptSupportsBatch(){
+  const url = getSheetsUrl();
+  if(!url) return false;
+  if(batchOkUrl === url) return true;
+  const cfg = await fetchConfig(url);
+  if(cfg && !Array.isArray(cfg) && cfg.batch){ batchOkUrl = url; return true; }
+  return false;
+}
+async function sendAttendanceBatch(dk, items){
+  if(!getSheetsUrl() || !items.length) return;
+  if(await scriptSupportsBatch()){
+    const ok = await postToSheet({ jenis:"batch", tanggal:dk, rows:items });
+    if(!ok) showToast("Tersimpan di perangkat, tetapi gagal dikirim ke Google Sheets");
+    return;
+  }
+  showToast("Mengirim ke Google Sheets satu per satu. Pasang script terbaru agar lebih cepat.");
+  for(const it of items){
+    await postToSheet({ tanggal:dk, id:it.id, nama:it.nama, status:it.status });
+  }
+}
+async function bulkMark(overwrite){
+  const status = document.getElementById("bulkStatus").value;
+  const dk = scanDate();
+  const targets = STUDENTS.filter(s => overwrite ? currentAttendance[s.id] !== status : !currentAttendance[s.id]);
+  if(!STUDENTS.length){ showToast("Belum ada siswa di daftar"); return; }
+  if(!targets.length){
+    showToast(overwrite ? `Semua siswa sudah berstatus ${STATUS[status].label}` : "Semua siswa sudah diabsen");
+    return;
+  }
+  const when = isScanToday() ? "hari ini" : formatTanggalIndo(dk);
+  const msg = overwrite
+    ? `Ubah ${targets.length} siswa menjadi ${STATUS[status].label} untuk ${when}?\n\nStatus sebelumnya pada siswa tersebut akan diganti.`
+    : `Absen ${targets.length} siswa yang belum diabsen menjadi ${STATUS[status].label} untuk ${when}?`;
+  if(!confirm(msg)) return;
+  const prev = { ...currentAttendance };
+  targets.forEach(s=>{ currentAttendance[s.id] = status; });
+  const ok = await saveAttendance(dk, currentAttendance);
+  if(!ok){ currentAttendance = prev; renderProgress(); renderManualGrid(); showToast("Gagal menyimpan, coba lagi."); return; }
+  renderProgress(); renderManualGrid();
+  renderMissedDays(); try{ renderCalendar(); }catch(e){}
+  document.getElementById("manualGrid").style.display = "grid";
+  showToast(`${targets.length} siswa — ${STATUS[status].label} tersimpan${isScanToday() ? "" : " (" + scanDateShort(dk) + ")"}`);
+  sendAttendanceBatch(dk, targets.map(s=>({ id:s.id, nama:s.name, status })));
+}
+document.getElementById("bulkFillBtn").addEventListener("click", ()=> bulkMark(false));
+document.getElementById("bulkAllBtn").addEventListener("click", ()=> bulkMark(true));
 async function scriptSupportsConfig(){
   const url = getSheetsUrl();
   if(!url) return false;
@@ -2219,6 +2297,89 @@ document.getElementById("bulkAddBtn").addEventListener("click", ()=>{
   setNextId(id); saveRoster(); afterRosterChange();
   ta.value = "";
   showToast(`${names.length} siswa ditambahkan`);
+});
+
+// ---------- cadangan & pemulihan data ----------
+const BACKUP_KEYS = ["classProfile","studentsRoster","nextStudentId","sheetsUrl","themePreference","customLogo"];
+function isBackupKey(k){ return BACKUP_KEYS.includes(k) || k.startsWith("absensi:") || k.startsWith("log_"); }
+function buildBackup(){
+  const data = {};
+  try{
+    for(let i=0;i<localStorage.length;i++){
+      const k = localStorage.key(i);
+      if(k && isBackupKey(k)) data[k] = localStorage.getItem(k);
+    }
+  }catch(e){}
+  // pastikan daftar siswa & identitas kelas selalu ikut, walau belum pernah disimpan eksplisit
+  data.studentsRoster = JSON.stringify(STUDENTS);
+  data.nextStudentId = String(getNextId());
+  if(PROFILE) data.classProfile = JSON.stringify(PROFILE);
+  return { app:"absen-kelas", versi:1, dibuat:new Date().toISOString(), kelas:profileView().kelas, data };
+}
+function backupFileName(){
+  return `Cadangan_Absen_${slugName(profileView().kelas)}_${todayKey()}.json`;
+}
+function updateBackupInfo(){
+  const el = document.getElementById("backupInfo");
+  if(!el) return;
+  let hari = 0, last = "";
+  try{
+    for(let i=0;i<localStorage.length;i++){ const k = localStorage.key(i); if(k && k.startsWith("absensi:") && hasAbsenOn(k.slice(8))) hari++; }
+    last = localStorage.getItem("lastBackup") || "";
+  }catch(e){}
+  const lastTxt = last ? `Terakhir dicadangkan: ${formatTanggalIndo(last.slice(0,10))}` : "Belum pernah dicadangkan";
+  el.textContent = `${STUDENTS.length} siswa · ${hari} hari absen tersimpan di perangkat ini. ${lastTxt}.`;
+}
+function markBackupDone(){ try{ localStorage.setItem("lastBackup", new Date().toISOString()); }catch(e){} updateBackupInfo(); }
+document.getElementById("backupDownloadBtn").addEventListener("click", ()=>{
+  const json = JSON.stringify(buildBackup());
+  const blob = new Blob([json], { type:"application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = backupFileName();
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(a.href), 2000);
+  markBackupDone(); showToast("File cadangan diunduh");
+});
+(function(){
+  const btn = document.getElementById("backupShareBtn");
+  try{
+    const probe = new File(["{}"], "x.json", { type:"application/json" });
+    if(navigator.share && navigator.canShare && navigator.canShare({ files:[probe] })) btn.style.display = "";
+  }catch(e){}
+  btn.addEventListener("click", async ()=>{
+    const file = new File([JSON.stringify(buildBackup())], backupFileName(), { type:"application/json" });
+    try{
+      await navigator.share({ files:[file], title:"Cadangan Absen Kelas" });
+      markBackupDone();
+    }catch(e){
+      if(e && e.name !== "AbortError") showToast("Tidak bisa membagikan, gunakan Unduh Cadangan");
+    }
+  });
+})();
+document.getElementById("backupRestoreBtn").addEventListener("click", ()=> document.getElementById("backupFileInput").click());
+document.getElementById("backupFileInput").addEventListener("change", async (e)=>{
+  const f = e.target.files && e.target.files[0];
+  e.target.value = "";
+  if(!f) return;
+  let obj;
+  try{ obj = JSON.parse(await f.text()); }catch(err){ showToast("File tidak bisa dibaca. Pilih file cadangan Absen Kelas."); return; }
+  if(!obj || obj.app !== "absen-kelas" || !obj.data || typeof obj.data !== "object"){ showToast("Ini bukan file cadangan Absen Kelas."); return; }
+  const keys = Object.keys(obj.data).filter(k=>isBackupKey(k) && typeof obj.data[k] === "string");
+  const hari = keys.filter(k=>k.startsWith("absensi:")).length;
+  let siswa = 0;
+  try{ siswa = JSON.parse(obj.data.studentsRoster || "[]").length; }catch(err){}
+  const tgl = obj.dibuat ? formatTanggalIndo(String(obj.dibuat).slice(0,10)) : "-";
+  const msg = `Pulihkan cadangan ${obj.kelas || ""}?\n\nDibuat: ${tgl}\nIsi: ${siswa} siswa, ${hari} hari absen\n\nSemua data di perangkat ini akan DIGANTI dengan isi file ini. Lanjutkan?`;
+  if(!confirm(msg)) return;
+  try{
+    const old = [];
+    for(let i=0;i<localStorage.length;i++){ const k = localStorage.key(i); if(k && isBackupKey(k)) old.push(k); }
+    old.forEach(k=>localStorage.removeItem(k));
+    keys.forEach(k=>localStorage.setItem(k, obj.data[k]));
+    localStorage.setItem("lastBackup", new Date().toISOString());
+  }catch(err){ showToast("Gagal memulihkan: " + err.message); return; }
+  showToast("Data dipulihkan, memuat ulang...");
+  setTimeout(()=> location.reload(), 900);
 });
 
 // ---------- init ----------
