@@ -722,6 +722,12 @@
   <div class="setup-box">
     <h2 id="setupTitle" style="margin-bottom:6px;">Pengaturan Awal Kelas</h2>
     <p class="scan-hint" id="setupIntro" style="text-align:left; margin:0 0 14px;">Isi identitas kelas ini. Data disimpan di perangkat dan di Google Sheets kelas Anda.</p>
+    <div id="setupRestoreWrap" style="background:var(--bg); border:1.5px dashed var(--line); border-radius:12px; padding:14px; margin-bottom:16px;">
+      <div style="font-weight:800; margin-bottom:6px;">Pindah dari handphone / perangkat lain?</div>
+      <p class="scan-hint" style="text-align:left; margin:0 0 10px;">Pulihkan dari file cadangan agar data lama (absen, daftar siswa, kartu QR) ikut pindah dan tidak perlu mengetik ulang.</p>
+      <button class="btn-primary" id="setupRestoreBtn" style="width:100%;">Pulihkan dari file cadangan</button>
+    </div>
+    <p class="scan-hint" id="setupOrText" style="text-align:left; margin:0 0 12px; font-weight:700;">Atau isi data kelas baru:</p>
     <label class="setup-label">Nama kelas *</label>
     <input type="text" id="setupKelas" class="text-input" placeholder="contoh: Kelas 4A">
     <label class="setup-label">Nama sekolah</label>
@@ -2227,6 +2233,8 @@ function openSetup(first){
   $("setupCancelBtn").style.display = first ? "none" : "";
   $("setupTitle").textContent = first ? "Pengaturan Awal Kelas" : "Ubah Identitas Kelas";
   $("setupIntro").style.display = first ? "" : "none";
+  $("setupRestoreWrap").style.display = first ? "" : "none";
+  $("setupOrText").style.display = first ? "" : "none";
   $("setupOverlay").classList.add("open");
 }
 function closeSetup(){ document.getElementById("setupOverlay").classList.remove("open"); }
@@ -2250,6 +2258,7 @@ document.getElementById("setupLoadBtn").addEventListener("click", async ()=>{
   $("setupMsg").textContent = `Data dimuat${hasRoster ? " (" + cfg.roster.length + " siswa)" : ""}. Periksa lalu tekan Simpan.`;
 });
 document.getElementById("setupCancelBtn").addEventListener("click", closeSetup);
+document.getElementById("setupRestoreBtn").addEventListener("click", ()=> document.getElementById("backupFileInput").click());
 document.getElementById("editProfileBtn").addEventListener("click", ()=> openSetup(false));
 document.getElementById("setupSaveBtn").addEventListener("click", async ()=>{
   const $ = id => document.getElementById(id);
