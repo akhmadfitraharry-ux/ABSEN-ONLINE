@@ -566,6 +566,25 @@
         <tbody id="logBody-keluar"></tbody>
       </table>
     </div>
+    <div class="card" style="margin-top:14px;" id="keluarRekapCard">
+      <h3 class="section-title">Rekap Keluar Kelas</h3>
+      <label class="setup-label" for="keluarRekapBulan">Pilih bulan</label>
+      <input type="month" id="keluarRekapBulan" class="text-input" style="margin-bottom:12px;">
+      <button class="btn-primary" id="keluarDownloadCsvBtn" style="width:100%; margin-bottom:10px;">Unduh rekap (CSV)</button>
+      <button class="btn-primary" id="keluarDownloadXlsxBtn" style="width:100%; margin-bottom:14px;">Unduh Excel (.xlsx)</button>
+      <div class="summary-row" id="keluarRekapSummary"></div>
+      <h4 style="margin:14px 0 6px; font-size:14px;">Per siswa</h4>
+      <table class="recap">
+        <thead><tr><th>No</th><th>Nama</th><th>Jumlah</th><th>Rincian alasan</th></tr></thead>
+        <tbody id="keluarRekapSiswa"></tbody>
+      </table>
+      <h4 style="margin:16px 0 6px; font-size:14px;">Rincian kejadian</h4>
+      <table class="recap">
+        <thead><tr><th>Tanggal</th><th>Waktu</th><th>Nama</th><th>Keterangan</th></tr></thead>
+        <tbody id="keluarRekapRinci"></tbody>
+      </table>
+      <p class="scan-hint" style="text-align:left; margin:10px 0 0;">Rekap dihitung dari catatan di perangkat ini. Catatan lengkap semua perangkat ada di sheet "Keluar Kelas" pada Google Sheets.</p>
+    </div>
   </section>
 
   <!-- QR TAB -->
@@ -606,7 +625,8 @@
       <h3>Rekap harian</h3>
       <input type="date" id="recapDate">
     </div>
-    <button class="btn-primary" id="downloadDailyBtn" style="margin-bottom:14px;">Unduh rekap (CSV)</button>
+    <button class="btn-primary" id="downloadDailyBtn" style="margin-bottom:10px;">Unduh rekap (CSV)</button>
+    <button class="btn-primary" id="downloadDailyXlsxBtn" style="margin-bottom:14px;">Unduh Excel (.xlsx)</button>
     <div class="summary-row" id="summaryRow"></div>
     <table class="recap">
       <thead><tr><th>No</th><th>Nama</th><th>Status</th><th>Waktu</th></tr></thead>
@@ -621,7 +641,8 @@
       <input type="month" id="monthlyDate">
     </div>
     <p class="scan-hint" id="monthlyMeta" style="text-align:left; margin:-6px 0 14px;"></p>
-    <button class="btn-primary" id="downloadMonthlyBtn" style="margin-bottom:14px;">Unduh rekap (CSV)</button>
+    <button class="btn-primary" id="downloadMonthlyBtn" style="margin-bottom:10px;">Unduh rekap (CSV)</button>
+    <button class="btn-primary" id="downloadMonthlyXlsxBtn" style="margin-bottom:14px;">Unduh Excel (.xlsx)</button>
     <div class="summary-row" id="monthlySummaryRow"></div>
     <table class="recap">
       <thead><tr><th>No</th><th>Nama</th><th>Hadir</th><th>Izin</th><th>Sakit</th><th>Alpa</th></tr></thead>
@@ -1020,6 +1041,7 @@ document.querySelectorAll(".side-item").forEach(btn=>{
     if(btn.dataset.tab === "home") renderHome();
     if(btn.dataset.tab === "siswa") renderStudentManageList();
     if(btn.dataset.tab === "settings") updateBackupInfo();
+    if(btn.dataset.tab === "keluar") renderKeluarRekap();
     if(btn.dataset.tab === "scan"){
       refreshScanState();
       stopKeluarScanner();
@@ -1605,6 +1627,7 @@ function saveLogEntry(id, s, note){
   try{ localStorage.setItem(key, JSON.stringify(list)); }catch(e){}
   postToSheet({ jenis: KELUAR_CONFIG.jenis, tanggal: entry.tanggal, id, nama: s.name, keterangan: note });
   renderLogToday("keluar");
+  try{ renderKeluarRekap(); }catch(e){}
 }
 function deleteLogEntry(mode, uid){
   const key = `log_${mode}`;
@@ -1613,6 +1636,7 @@ function deleteLogEntry(mode, uid){
   list = list.filter(e => e.uid !== uid);
   try{ localStorage.setItem(key, JSON.stringify(list)); }catch(e){}
   renderLogToday(mode);
+  try{ renderKeluarRekap(); }catch(e){}
   showToast("Catatan dihapus");
 }
 function renderLogToday(mode){
@@ -2389,6 +2413,154 @@ document.getElementById("backupFileInput").addEventListener("change", async (e)=
   }catch(err){ showToast("Gagal memulihkan: " + err.message); return; }
   showToast("Data dipulihkan, memuat ulang...");
   setTimeout(()=> location.reload(), 900);
+});
+
+// ---------- penulis file .xlsx sederhana (tanpa pustaka) ----------
+const CRC_TABLE = (()=>{ const t = new Uint32Array(256); for(let n=0;n<256;n++){ let c = n; for(let k=0;k<8;k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1); t[n] = c >>> 0; } return t; })();
+function crc32(bytes){ let c = 0xFFFFFFFF; for(let i=0;i<bytes.length;i++) c = CRC_TABLE[(c ^ bytes[i]) & 0xFF] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+function zipStore(files){
+  const enc = new TextEncoder();
+  const chunks = [], central = [];
+  let offset = 0;
+  const u16 = n => [n & 255, (n >>> 8) & 255];
+  const u32 = n => [n & 255, (n >>> 8) & 255, (n >>> 16) & 255, (n >>> 24) & 255];
+  files.forEach(f=>{
+    const name = enc.encode(f.name), data = enc.encode(f.content), crc = crc32(data);
+    const local = new Uint8Array([0x50,0x4B,0x03,0x04, ...u16(20), ...u16(0x0800), ...u16(0), ...u16(0), ...u16(0x21), ...u32(crc), ...u32(data.length), ...u32(data.length), ...u16(name.length), ...u16(0)]);
+    chunks.push(local, name, data);
+    central.push({ name, crc, size:data.length, offset });
+    offset += local.length + name.length + data.length;
+  });
+  const cdStart = offset;
+  central.forEach(c=>{
+    const h = new Uint8Array([0x50,0x4B,0x01,0x02, ...u16(20), ...u16(20), ...u16(0x0800), ...u16(0), ...u16(0), ...u16(0x21), ...u32(c.crc), ...u32(c.size), ...u32(c.size), ...u16(c.name.length), ...u16(0), ...u16(0), ...u16(0), ...u16(0), ...u32(0), ...u32(c.offset)]);
+    chunks.push(h, c.name);
+    offset += h.length + c.name.length;
+  });
+  const end = new Uint8Array([0x50,0x4B,0x05,0x06, ...u16(0), ...u16(0), ...u16(central.length), ...u16(central.length), ...u32(offset - cdStart), ...u32(cdStart), ...u16(0)]);
+  chunks.push(end);
+  return new Blob(chunks, { type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+}
+function xmlEsc(t){ return String(t).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+function colLetter(i){ let s = ""; i++; while(i>0){ const m = (i-1) % 26; s = String.fromCharCode(65+m) + s; i = Math.floor((i-1)/26); } return s; }
+// sheets: [{ name, rows:[[cell,...],...], boldRows:[indeks baris tebal] }]
+function buildXlsxBlob(sheets){
+  const sheetXml = sh => {
+    const bold = new Set(sh.boldRows || []);
+    const widths = [];
+    sh.rows.forEach(r=> r.forEach((v,i)=>{ widths[i] = Math.min(60, Math.max(widths[i] || 8, String(v === null || v === undefined ? "" : v).length + 2)); }));
+    const cols = widths.map((w,i)=>`<col min="${i+1}" max="${i+1}" width="${w}" customWidth="1"/>`).join("");
+    const rows = sh.rows.map((r,ri)=>{
+      const cells = r.map((v,ci)=>{
+        const ref = colLetter(ci) + (ri+1), st = bold.has(ri) ? ' s="1"' : "";
+        if(v === null || v === undefined || v === "") return "";
+        if(typeof v === "number" && isFinite(v)) return `<c r="${ref}"${st}><v>${v}</v></c>`;
+        return `<c r="${ref}"${st} t="inlineStr"><is><t xml:space="preserve">${xmlEsc(v)}</t></is></c>`;
+      }).join("");
+      return `<row r="${ri+1}">${cells}</row>`;
+    }).join("");
+    return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><cols>${cols}</cols><sheetData>${rows}</sheetData></worksheet>`;
+  };
+  const files = [
+    { name:"[Content_Types].xml", content:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>${sheets.map((_,i)=>`<Override PartName="/xl/worksheets/sheet${i+1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`).join("")}</Types>` },
+    { name:"_rels/.rels", content:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>` },
+    { name:"xl/workbook.xml", content:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>${sheets.map((sh,i)=>`<sheet name="${xmlEsc(sh.name.replace(/[\\\/\?\*\[\]:]/g,"-").slice(0,31))}" sheetId="${i+1}" r:id="rId${i+1}"/>`).join("")}</sheets></workbook>` },
+    { name:"xl/_rels/workbook.xml.rels", content:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${sheets.map((_,i)=>`<Relationship Id="rId${i+1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${i+1}.xml"/>`).join("")}<Relationship Id="rId${sheets.length+1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>` },
+    { name:"xl/styles.xml", content:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>` },
+    ...sheets.map((sh,i)=>({ name:`xl/worksheets/sheet${i+1}.xml`, content:sheetXml(sh) }))
+  ];
+  return zipStore(files);
+}
+function downloadXLSX(filename, sheets){
+  const blob = buildXlsxBlob(sheets);
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(a.href), 2000);
+}
+function judulRekap(jenis){
+  const p = profileView();
+  return `${jenis} - ${p.kelas} ${p.sekolah}`.trim();
+}
+
+// Excel untuk rekap harian & bulanan
+document.getElementById("downloadDailyXlsxBtn").addEventListener("click", ()=>{
+  const rows = [[judulRekap("Rekap Absensi Harian")], ["Tanggal", formatTanggalIndo(lastDailyDateKey)], [], ["No","Nama","Status","Waktu"]];
+  STUDENTS.forEach((s,i)=>{
+    const st = lastDailyData[s.id];
+    rows.push([i+1, s.name, st ? STATUS[st].label : "Belum absen", lastDailyTimes[s.id] || "-"]);
+  });
+  downloadXLSX(`Absensi_${slugName(profileView().kelas)}_${lastDailyDateKey}.xlsx`, [{ name:"Rekap Harian", rows, boldRows:[0,3] }]);
+});
+document.getElementById("downloadMonthlyXlsxBtn").addEventListener("click", ()=>{
+  const rows = [[judulRekap("Rekap Absensi Bulanan")], ["Bulan", formatBulanIndo(lastMonthlyKey)], [], ["No","Nama","Hadir","Izin","Sakit","Alpa"]];
+  STUDENTS.forEach((s,i)=>{
+    const c = lastMonthlyPerStudent[s.id] || { hadir:0, izin:0, sakit:0, alpa:0 };
+    rows.push([i+1, s.name, c.hadir, c.izin, c.sakit, c.alpa]);
+  });
+  downloadXLSX(`Rekap_Bulanan_${slugName(profileView().kelas)}_${lastMonthlyKey}.xlsx`, [{ name:"Rekap Bulanan", rows, boldRows:[0,3] }]);
+});
+
+// ---------- rekap Keluar Kelas ----------
+function getKeluarRekap(monthKey){
+  let list = [];
+  try{ list = JSON.parse(localStorage.getItem("log_keluar") || "[]"); }catch(e){}
+  const entries = list.filter(e => e && String(e.tanggal).slice(0,7) === monthKey)
+    .sort((a,b)=> (a.tanggal + " " + a.waktu).localeCompare(b.tanggal + " " + b.waktu));
+  const perNama = {};
+  STUDENTS.forEach(s=>{ perNama[s.name] = { jumlah:0, alasan:{} }; });
+  entries.forEach(e=>{
+    const n = e.nama;
+    if(!perNama[n]) perNama[n] = { jumlah:0, alasan:{} };
+    perNama[n].jumlah++;
+    const a = (e.keterangan || "Tanpa keterangan");
+    perNama[n].alasan[a] = (perNama[n].alasan[a] || 0) + 1;
+  });
+  const siswa = Object.keys(perNama).map(nama=>({
+    nama, jumlah:perNama[nama].jumlah,
+    rincian: Object.keys(perNama[nama].alasan).map(a=>`${a} ${perNama[nama].alasan[a]}x`).join(", ")
+  }));
+  return { entries, siswa };
+}
+function renderKeluarRekap(){
+  const inp = document.getElementById("keluarRekapBulan");
+  if(!inp.value) inp.value = todayKey().slice(0,7);
+  const { entries, siswa } = getKeluarRekap(inp.value);
+  const aktif = siswa.filter(x=>x.jumlah>0).length;
+  document.getElementById("keluarRekapSummary").innerHTML =
+    `<div class="sum-chip" style="background:#F5A623;"><span class="n">${entries.length}</span><span>Total keluar</span></div>` +
+    `<div class="sum-chip" style="background:#4A90E2;"><span class="n">${aktif}</span><span>Siswa</span></div>`;
+  document.getElementById("keluarRekapSiswa").innerHTML = siswa.map((x,i)=>
+    `<tr><td>${i+1}</td><td>${escHtml(x.nama)}</td><td><b>${x.jumlah}</b></td><td>${x.rincian ? escHtml(x.rincian) : "-"}</td></tr>`).join("")
+    || `<tr><td colspan="4">Belum ada siswa.</td></tr>`;
+  document.getElementById("keluarRekapRinci").innerHTML = entries.length
+    ? entries.map(e=>`<tr><td>${escHtml(scanDateShort(e.tanggal))}</td><td>${escHtml(e.waktu || "")}</td><td>${escHtml(e.nama)}</td><td>${escHtml(e.keterangan || "-")}</td></tr>`).join("")
+    : `<tr><td colspan="4">Belum ada catatan keluar kelas di bulan ini.</td></tr>`;
+}
+document.getElementById("keluarRekapBulan").addEventListener("change", renderKeluarRekap);
+document.getElementById("keluarDownloadCsvBtn").addEventListener("click", ()=>{
+  const bulan = document.getElementById("keluarRekapBulan").value || todayKey().slice(0,7);
+  const { entries, siswa } = getKeluarRekap(bulan);
+  const q = t => `"${String(t).replace(/"/g,'""')}"`;
+  let csv = judulRekap("Rekap Keluar Kelas") + "\n";
+  csv += `Bulan,${formatBulanIndo(bulan)}\n\n`;
+  csv += "Ringkasan per siswa\nNo,Nama,Jumlah Keluar,Rincian Alasan\n";
+  siswa.forEach((x,i)=>{ csv += `${i+1},${q(x.nama)},${x.jumlah},${q(x.rincian || "-")}\n`; });
+  csv += "\nRincian kejadian\nTanggal,Waktu,Nama,Keterangan\n";
+  entries.forEach(e=>{ csv += `${e.tanggal},${e.waktu || ""},${q(e.nama)},${q(e.keterangan || "-")}\n`; });
+  downloadCSV(`Rekap_KeluarKelas_${slugName(profileView().kelas)}_${bulan}.csv`, csv);
+});
+document.getElementById("keluarDownloadXlsxBtn").addEventListener("click", ()=>{
+  const bulan = document.getElementById("keluarRekapBulan").value || todayKey().slice(0,7);
+  const { entries, siswa } = getKeluarRekap(bulan);
+  const r1 = [[judulRekap("Rekap Keluar Kelas")], ["Bulan", formatBulanIndo(bulan)], [], ["No","Nama","Jumlah Keluar","Rincian Alasan"]];
+  siswa.forEach((x,i)=> r1.push([i+1, x.nama, x.jumlah, x.rincian || "-"]));
+  const r2 = [["Tanggal","Waktu","Nama","Keterangan"]];
+  entries.forEach(e=> r2.push([e.tanggal, e.waktu || "", e.nama, e.keterangan || "-"]));
+  downloadXLSX(`Rekap_KeluarKelas_${slugName(profileView().kelas)}_${bulan}.xlsx`, [
+    { name:"Ringkasan", rows:r1, boldRows:[0,3] },
+    { name:"Rincian", rows:r2, boldRows:[0] }
+  ]);
 });
 
 // ---------- init ----------
